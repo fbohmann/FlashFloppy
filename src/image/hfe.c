@@ -150,7 +150,8 @@ static void hfe_setup_track(
         *start_pos = sys_ticks;
     } else {
         /* Write mode. */
-        im->hfe.trk_pos = im->cur_bc / 8;
+        im->hfe.write_start = im->hfe.trk_pos = im->cur_bc / 8;
+        im->hfe.write_wrapped = FALSE;
     }
 }
 
@@ -302,10 +303,20 @@ static bool_t hfe_write_track(struct image *im)
 
         /* All bytes remaining in the raw-bitcell buffer. */
         nr = p - c;
+
+        /* Entire track has been written? Then discard fresh data and bail. */
+        if (im->hfe.write_wrapped && (off == im->hfe.write_start)) {
+            c += nr;
+            break;
+        }
+
         /* Limit to end of current 256-byte HFE block. */
         nr = min_t(UINT, nr, 256 - (off & 255));
         /* Limit to end of HFE track. */
         nr = min_t(UINT, nr, im->hfe.trk_len - off);
+        /* Limit to wrap point. */
+        if (off < im->hfe.write_start)
+            nr = min_t(UINT, nr, im->hfe.write_start - off);
 
         /* Bail if no bytes to write, or if we could batch some more. */
         if ((nr == 0) || ((nr == (p - c)) && !flush))
@@ -344,6 +355,7 @@ static bool_t hfe_write_track(struct image *im)
         if (im->hfe.trk_pos >= im->hfe.trk_len) {
             ASSERT(im->hfe.trk_pos == im->hfe.trk_len);
             im->hfe.trk_pos = 0;
+            im->hfe.write_wrapped = TRUE;
             if (batch) {
                 /* Process contiguous batch and ask to be called again for data
                  * at start of track. */
