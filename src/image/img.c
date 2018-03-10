@@ -31,7 +31,7 @@ const static struct img_type {
     uint8_t interleave:2;
     uint8_t no:2;
     uint8_t base:2;
-    uint8_t skew:2;
+    uint8_t skew:3;
 } img_type[] = {
     {  9, 1, 84, 1, 2, 1, 0 },
     { 10, 1, 30, 1, 2, 1, 0 },
@@ -51,7 +51,7 @@ const static struct img_type {
     { 16, 1, 57, 1, 1, 0, 0 }, /* ADFS M 320k */
     { 0 }
 }, akai_type[] = {
-    { 10, 2, 116, 1, 3, 1, 0 }, /* Akai HD: 10 * 1kB sectors */
+    { 10, 2, 116, 1, 3, 1, 4 }, /* Akai HD: 10 * 1kB sectors */
     { 0 }
 }, ensoniq_type[] = {
     {  9, 2, 84, 1, 2, 1, 0 },  /* PC 720kB */
@@ -143,6 +143,7 @@ static bool_t img_open(struct image *im)
     case HOST_akai:
     case HOST_gem:
         type = akai_type;
+        im->img.skew_cyls_only = TRUE;
         break;
     case HOST_ensoniq:
         type = ensoniq_type;
