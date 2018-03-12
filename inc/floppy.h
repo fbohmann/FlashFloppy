@@ -9,7 +9,7 @@
  * See the file COPYING for more details, or visit <http://unlicense.org>.
  */
 
-#define DRIVE_SETTLE_MS 12
+#define DRIVE_SETTLE_MS 0
 
 #define FINTF_SHUGART     0
 #define FINTF_IBMPC       1
